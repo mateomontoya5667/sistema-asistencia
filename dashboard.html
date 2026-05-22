@@ -18,9 +18,22 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
-  <!-- App config -->
-  <script src="config.js"></script>
-  <script src="firebase-config.js"></script>
+  <!-- App config (inline para evitar 404 en hosting) -->
+  <script>
+    const FIREBASE_CONFIG = {
+      apiKey:            "AIzaSyDE5XBd7bbKFFXeZOYoGpHBNbROdkYbJgA",
+      authDomain:        "asistencia-juventudes-cv.firebaseapp.com",
+      projectId:         "asistencia-juventudes-cv",
+      storageBucket:     "asistencia-juventudes-cv.firebasestorage.app",
+      messagingSenderId: "285970305230",
+      appId:             "1:285970305230:web:c4863613b234b45a69009f",
+    };
+    const SESSION_DURATION_MS = 5 * 60 * 1000;
+    const COORDINATORS = [
+      { username: 'admin',  password: 'admin123',  name: 'Administrador', role: 'admin'       },
+      { username: 'coord1', password: 'coord123',  name: 'Coordinador 1', role: 'coordinator' },
+    ];
+  </script>
 
 <style>
 /* ── Reset & Tokens ─────────────────────────────────────────── */
