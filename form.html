@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Asistencia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #6C3DE0; --p-dark: #4A1FA8; --accent: #00BCD4;
+      --success: #4CAF50; --danger: #EF5350; --warning: #FF9800;
+      --bg: #F0EDFF; --card: #fff; --text: #1a1a2e; --muted: #888; --border: #e8e8ee;
+      --shadow: 0 8px 32px rgba(108,61,224,.15);
+    }
+    body {
+      font-family: 'Poppins', sans-serif; min-height: 100vh;
+      background: linear-gradient(160deg, #4A1FA8 0%, #6C3DE0 45%, #00BCD4 100%);
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 32px 16px 60px;
+    }
+    .card { background: var(--card); border-radius: 24px; width: 100%; max-width: 440px; box-shadow: var(--shadow); overflow: hidden; }
+
+    .card-header {
+      background: linear-gradient(135deg, var(--p-dark), var(--primary));
+      padding: 24px 28px; color: #fff;
+    }
+    .card-header .tag { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; opacity: .75; margin-bottom: 6px; }
+    .card-header h1  { font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
+    .card-header .meta { font-size: .8rem; opacity: .8; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+
+    .timer-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(255,255,255,.18); border-radius: 20px;
+      padding: 4px 12px; font-size: .75rem; font-weight: 600; margin-top: 10px;
+    }
+    .timer-badge.warning { background: rgba(255,152,0,.4); }
+    .timer-badge.danger  { background: rgba(239,83,80,.4); }
+
+    .card-body { padding: 28px; }
+
+    .field { margin-bottom: 20px; }
+    .field label { display: block; font-size: .82rem; font-weight: 600; color: #444; margin-bottom: 7px; }
+    .field .optional { font-size: .72rem; font-weight: 400; color: var(--muted); margin-left: 4px; }
+    .input-wrap { position: relative; }
+    .input-wrap i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #bbb; font-size: .95rem; }
+    .input-wrap input {
+      width: 100%; padding: 13px 14px 13px 40px;
+      border: 2px solid var(--border); border-radius: 10px;
+      font-family: 'Poppins', sans-serif; font-size: .92rem; color: var(--text);
+      outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .input-wrap input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(108,61,224,.1); }
+    .input-wrap input.error { border-color: var(--danger); }
+    .field-error { font-size: .75rem; color: var(--danger); margin-top: 5px; display: none; }
+    .field-error.show { display: block; }
+
+    /* Nuevos miembros */
+    .new-member-banner {
+      background: linear-gradient(135deg, #ede7ff, #e8f5ff);
+      border-left: 4px solid var(--primary); border-radius: 10px;
+      padding: 12px 16px; font-size: .82rem; color: var(--text);
+      margin-bottom: 18px; display: none;
+      align-items: flex-start; gap: 10px; line-height: 1.5;
+    }
+    .new-member-banner.show { display: flex; }
+    .new-member-banner i { color: var(--primary); font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+    #extended-fields { display: none; }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .slide-in { animation: slideDown .3s ease; }
+
+    .dup-msg {
+      background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px;
+      padding: 12px 14px; font-size: .82rem; color: #795548;
+      margin-bottom: 18px; display: none; gap: 8px; align-items: flex-start;
+    }
+    .dup-msg.show { display: flex; }
+    .dup-msg i { color: var(--warning); margin-top: 1px; }
+
+    .btn-submit {
+      width: 100%; padding: 15px; border: none; border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--p-dark));
+      color: #fff; font-family: 'Poppins', sans-serif;
+      font-size: 1rem; font-weight: 700; cursor: pointer;
+      transition: opacity .2s, transform .1s;
+      display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px;
+    }
+    .btn-submit:hover { opacity: .92; }
+    .btn-submit:active { transform: scale(.98); }
+    .btn-submit:disabled { opacity: .6; cursor: not-allowed; }
+    .btn-submit .spin {
+      width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.4);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin .6s linear infinite; display: none;
+    }
+    .btn-submit.loading .spin  { display: block; }
+    .btn-submit.loading .label { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* SCREENS */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    #screen-loading { padding: 64px 28px; text-align: center; }
+    .loader {
+      width: 48px; height: 48px; border: 4px solid #ede7ff;
+      border-top-color: var(--primary); border-radius: 50%;
+      animation: spin .7s linear infinite; margin: 0 auto 16px;
+    }
+    #screen-loading p { color: var(--muted); font-size: .88rem; }
+
+    #screen-error { padding: 48px 28px; text-align: center; }
+    .error-icon {
+      width: 72px; height: 72px; border-radius: 50%; background: #fef2f2;
+      display: flex; align-items: center; justify-content: center; margin: 0 auto 18px;
+    }
+    .error-icon i { font-size: 1.8rem; color: var(--danger); }
+    #screen-error h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+    #screen-error p  { font-size: .85rem; color: var(--muted); line-height: 1.6; }
+    .error-hint {
+      margin-top: 18px; background: #f4f0ff; border-radius: 10px;
+      padding: 12px 16px; font-size: .78rem; color: var(--primary); line-height: 1.5;
+    }
+
+    #screen-success { padding: 48px 28px; text-align: center; }
+    .success-icon {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      animation: popIn .4s cubic-bezier(.175,.885,.32,1.275);
+    }
+    @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .success-icon i { font-size: 2rem; color: #fff; }
+    #screen-success h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
+    .person-name { font-size: 1.4rem; font-weight: 700; color: var(--primary); margin-bottom: 10px; }
+    #screen-success p  { font-size: .85rem; color: var(--muted); line-height: 1.5; }
+    .event-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #ede7ff; color: var(--primary); border-radius: 20px;
+      padding: 6px 16px; font-size: .8rem; font-weight: 600; margin-top: 14px;
+    }
+    .new-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #e8f5e9; color: var(--success); border-radius: 20px;
+      padding: 5px 14px; font-size: .76rem; font-weight: 600; margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <!-- Loading -->
+  <div id="screen-loading" class="screen active">
+    <div class="loader"></div>
+    <p>Verificando sesión…</p>
+  </div>
+
+  <!-- Error -->
+  <div id="screen-error" class="screen">
+    <div class="error-icon"><i class="fas fa-times"></i></div>
+    <h2 id="error-title">Sesión no disponible</h2>
+    <p id="error-desc"></p>
+    <div class="error-hint" id="error-hint" style="display:none"></div>
+  </div>
+
+  <!-- Form -->
+  <div id="screen-form" class="screen">
+    <div class="card-header">
+      <div class="tag"><i class="fas fa-check-circle"></i> Registro de asistencia</div>
+      <h1 id="event-title">—</h1>
+      <div id="event-desc-wrap" style="font-size:.82rem;opacity:.85;margin-top:4px;display:none">
+        📌 <span id="event-desc-text"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:8px;
+                  background:rgba(255,255,255,.2);border-radius:8px;padding:6px 12px;
+                  font-size:.85rem;font-weight:600" id="leader-row">
+        <i class="fas fa-user-check"></i>
+        Encargado: <span id="event-leader-name">—</span>
+      </div>
+      <div class="meta" style="margin-top:6px">
+        <i class="fas fa-user-tie"></i> <span id="coord-name">—</span>
+        &nbsp;·&nbsp;
+        <i class="fas fa-calendar-alt"></i> <span id="event-date">—</span>
+      </div>
+      <div class="timer-badge" id="timer-badge">
+        <i class="fas fa-clock"></i> <span id="timer-text">—</span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="dup-msg" id="dup-msg">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>Ya existe un registro con ese nombre en esta sesión. Si eres tú, ya estás anotado.</span>
+      </div>
+
+      <form id="form">
+        <!-- Nombre -->
+        <div class="field">
+          <label>Nombre completo <span style="color:var(--danger)">*</span></label>
+          <div class="input-wrap">
+            <i class="fas fa-user"></i>
+            <input id="name" type="text" placeholder="TU NOMBRE Y APELLIDO"
+                   maxlength="80" autocomplete="off" required
+                   list="past-names" style="text-transform:uppercase">
+          </div>
+          <div class="field-error" id="name-error">Por favor ingresa tu nombre.</div>
+        </div>
+        <datalist id="past-names"></datalist>
+
+        <!-- Teléfono -->
+        <div class="field">
+          <label>Número de celular <span class="optional">(opcional)</span></label>
+          <div class="input-wrap">
+            <i class="fas fa-phone"></i>
+            <input id="phone" type="tel" placeholder="ej. 3001234567" maxlength="20" autocomplete="tel">
+          </div>
+        </div>
+
+        <!-- Banner nuevo miembro -->
+        <div class="new-member-banner" id="new-member-banner">
+          <i class="fas fa-user-plus"></i>
+          <span><strong>¡Bienvenido/a!</strong> Es tu primera vez aquí. Por favor completa tu información adicional.</span>
+        </div>
+
+        <!-- Campos extendidos (solo nuevos miembros) -->
+        <div id="extended-fields">
+          <div class="field">
+            <label>Adulto responsable <span style="color:var(--danger)">*</span></label>
+            <div class="input-wrap">
+              <i class="fas fa-user-shield"></i>
+              <input id="responsible" type="text" maxlength="80" placeholder="Nombre del adulto responsable">
+            </div>
+            <div class="field-error" id="responsible-error">Por favor ingresa el adulto responsable.</div>
+          </div>
+          <div class="field">
+            <label>Contacto de emergencia <span style="color:var(--danger)">*</span></label>
+            <div class="input-wrap">
+              <i class="fas fa-phone-alt"></i>
+              <input id="emergency" type="tel" maxlength="20" placeholder="Número de contacto de emergencia">
+            </div>
+            <div class="field-error" id="emergency-error">Por favor ingresa el contacto de emergencia.</div>
+          </div>
+        </div>
+
+        <button type="submit" id="submit-btn" class="btn-submit">
+          <span class="label"><i class="fas fa-paper-plane"></i> Registrar asistencia</span>
+          <div class="spin"></div>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Success -->
+  <div id="screen-success" class="screen">
+    <div class="card-header" style="text-align:center">
+      <div class="tag">Asistencia confirmada</div>
+      <h1>¡Registro exitoso!</h1>
+    </div>
+    <div class="card-body" style="text-align:center;padding-top:36px">
+      <div style="font-size:1.6rem;margin-bottom:16px">🎉</div>
+      <div class="success-icon"><i class="fas fa-check"></i></div>
+      <h2>¡Hola!</h2>
+      <div class="person-name" id="success-name"></div>
+      <p>Tu asistencia fue registrada correctamente.</p>
+      <div class="event-pill"><i class="fas fa-calendar-check"></i> <span id="success-event"></span></div>
+      <div class="new-badge" id="success-new-badge" style="display:none">
+        <i class="fas fa-star"></i> ¡Nuevo miembro registrado!
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  let sessionData   = null;
+  let timerInterval = null;
+  let memberStatus  = null; // null=sin verificar | 'existing'=ya existe | 'new'=nuevo
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function showError(title, desc, hint) {
+    clearInterval(timerInterval);
+    document.getElementById('error-title').textContent = title;
+    document.getElementById('error-desc').textContent  = desc;
+    const hintEl = document.getElementById('error-hint');
+    if (hint) { hintEl.textContent = hint; hintEl.style.display = 'block'; }
+    showScreen('screen-error');
+  }
+
+  // ─── Firebase ─────────────────────────────────────────────
+  if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+  const db        = firebase.firestore();
+  const sessCol   = db.collection('sessions');
+  const attCol    = sid => sessCol.doc(sid).collection('attendees');
+  const memberCol = db.collection('members');
+
+  // ─── Init ─────────────────────────────────────────────────
+  (async function init() {
+    const params    = new URLSearchParams(location.search);
+    const sessionId = params.get('s');
+
+    if (!sessionId) {
+      showError('Enlace inválido', 'No se encontró el identificador de sesión.');
+      return;
+    }
+
+    try {
+      const docSnap = await sessCol.doc(sessionId).get();
+
+      if (!docSnap.exists) {
+        showError(
+          'Sesión no encontrada',
+          'Esta sesión no existe o fue eliminada.',
+          'Asegúrate de haber escaneado el código QR correcto, o pide uno nuevo al coordinador.'
+        );
+        return;
+      }
+
+      const session = { id: docSnap.id, ...docSnap.data() };
+
+      if (!session.active) {
+        showError('Sesión cerrada', 'El coordinador cerró esta sesión de asistencia.');
+        return;
+      }
+
+      if (Date.now() > session.expiresAt) {
+        showError('QR expirado', 'Este código QR ya venció. Pide al coordinador que genere uno nuevo.');
+        return;
+      }
+
+      sessionData = session;
+
+      document.getElementById('event-title').textContent       = session.eventName       || 'Reunión';
+      document.getElementById('event-leader-name').textContent = session.eventLeader     || '—';
+      document.getElementById('coord-name').textContent        = session.coordinatorName || '—';
+      document.getElementById('event-date').textContent        = session.date            || '';
+
+      if (!session.eventLeader) {
+        document.getElementById('leader-row').style.display = 'none';
+      }
+      if (session.eventDescription) {
+        document.getElementById('event-desc-text').textContent   = session.eventDescription;
+        document.getElementById('event-desc-wrap').style.display = 'block';
+      }
+
+      loadPastNames();
+      startTimer(session.expiresAt);
+      showScreen('screen-form');
+      document.getElementById('name').focus();
+
+    } catch(e) {
+      console.error('[init]', e);
+      showError(
+        'Error de conexión',
+        'No se pudo conectar con el servidor.',
+        'Verifica tu conexión a internet e intenta escanear el QR de nuevo.'
+      );
+    }
+  })();
+
+  // ─── Timer ────────────────────────────────────────────────
+  function startTimer(expiresAt) {
+    const badge = document.getElementById('timer-badge');
+    const text  = document.getElementById('timer-text');
+    const update = () => {
+      const remaining = Math.max(0, expiresAt - Date.now());
+      const secs = Math.floor(remaining / 1000);
+      const m    = Math.floor(secs / 60);
+      const s    = secs % 60;
+      text.textContent = m + ':' + String(s).padStart(2, '0') + ' restantes';
+      badge.className = 'timer-badge';
+      if (remaining < 60000)       badge.classList.add('danger');
+      else if (remaining < 120000) badge.classList.add('warning');
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+        showError('QR expirado', 'El tiempo se agotó. Pide al coordinador un nuevo código QR.');
+      }
+    };
+    update();
+    timerInterval = setInterval(update, 1000);
+  }
+
+  // ─── Submit ───────────────────────────────────────────────
+  document.getElementById('form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const name  = document.getElementById('name').value.trim().toUpperCase();
+    const phone = document.getElementById('phone').value.trim();
+
+    if (!name) {
+      document.getElementById('name').classList.add('error');
+      document.getElementById('name-error').classList.add('show');
+      document.getElementById('name').focus();
+      return;
+    }
+    document.getElementById('name').classList.remove('error');
+    document.getElementById('name-error').classList.remove('show');
+    document.getElementById('dup-msg').classList.remove('show');
+
+    if (!sessionData || Date.now() > sessionData.expiresAt) {
+      showError('QR expirado', 'El tiempo se agotó. Pide un nuevo código al coordinador.');
+      return;
+    }
+
+    const btn = document.getElementById('submit-btn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    try {
+      if (memberStatus === null) {
+        // Primera vez: verificar si ya existe como miembro
+        const memberSnap = await memberCol
+          .where('nameLower', '==', name.toLowerCase()).get();
+
+        if (!memberSnap.empty) {
+          memberStatus = 'existing';
+          await recordAttendance(name, phone, false, null, null);
+        } else {
+          // Nuevo miembro → mostrar campos extendidos
+          memberStatus = 'new';
+          btn.classList.remove('loading');
+          btn.disabled = false;
+          showExtendedForm();
+        }
+
+      } else if (memberStatus === 'new') {
+        // Segunda entrega: validar y guardar campos extendidos
+        const responsible = document.getElementById('responsible').value.trim();
+        const emergency   = document.getElementById('emergency').value.trim();
+        let valid = true;
+
+        if (!responsible) {
+          document.getElementById('responsible-error').classList.add('show');
+          valid = false;
+        } else {
+          document.getElementById('responsible-error').classList.remove('show');
+        }
+        if (!emergency) {
+          document.getElementById('emergency-error').classList.add('show');
+          valid = false;
+        } else {
+          document.getElementById('emergency-error').classList.remove('show');
+        }
+
+        if (!valid) {
+          btn.classList.remove('loading');
+          btn.disabled = false;
+          return;
+        }
+
+        await recordAttendance(name, phone, true, responsible, emergency);
+      }
+
+    } catch(e) {
+      console.error('[submit]', e);
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      alert('Error al registrar. Verifica tu conexión e intenta de nuevo.');
+    }
+  });
+
+  // ─── Mostrar formulario extendido ─────────────────────────
+  function showExtendedForm() {
+    const banner = document.getElementById('new-member-banner');
+    const ext    = document.getElementById('extended-fields');
+    banner.classList.add('show');
+    ext.style.display   = 'block';
+    ext.classList.add('slide-in');
+    document.querySelector('#submit-btn .label').innerHTML =
+      '<i class="fas fa-user-plus"></i> Completar registro';
+    document.getElementById('responsible').focus();
+  }
+
+  // ─── Registrar asistencia ─────────────────────────────────
+  async function recordAttendance(name, phone, isNew, responsible, emergency) {
+    const btn = document.getElementById('submit-btn');
+
+    // Verificar duplicado
+    const dupSnap = await attCol(sessionData.id)
+      .where('nameLower', '==', name.toLowerCase()).get();
+
+    if (!dupSnap.empty) {
+      document.getElementById('dup-msg').classList.add('show');
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      memberStatus = null;
+      return;
+    }
+
+    // Guardar asistencia
+    await attCol(sessionData.id).add({
+      name,
+      nameLower:    name.toLowerCase(),
+      phone:        phone || null,
+      registeredAt: Date.now(),
+      isNew:        isNew,
+    });
+
+    // Actualizar colección de miembros
+    if (isNew) {
+      await memberCol.add({
+        name,
+        nameLower:        name.toLowerCase(),
+        phone:            phone || null,
+        responsibleAdult: responsible,
+        emergencyContact: emergency,
+        firstSeen:        Date.now(),
+        lastSeen:         Date.now(),
+        attendanceCount:  1,
+      });
+    } else {
+      const memberSnap = await memberCol
+        .where('nameLower', '==', name.toLowerCase()).get();
+      if (!memberSnap.empty) {
+        await memberSnap.docs[0].ref.update({
+          lastSeen:       Date.now(),
+          attendanceCount: firebase.firestore.FieldValue.increment(1),
+          phone: phone || memberSnap.docs[0].data().phone,
+        });
+      }
+    }
+
+    savePastName(name);
+    clearInterval(timerInterval);
+    document.getElementById('success-name').textContent  = name;
+    document.getElementById('success-event').textContent = sessionData.eventName || 'Reunión';
+    if (isNew) document.getElementById('success-new-badge').style.display = 'inline-flex';
+    showScreen('screen-success');
+  }
+
+  // ─── Mayúsculas + limpiar errores ────────────────────────
+  document.getElementById('name').addEventListener('input', function () {
+    const start = this.selectionStart;
+    const end   = this.selectionEnd;
+    this.value  = this.value.toUpperCase();
+    this.setSelectionRange(start, end);
+    this.classList.remove('error');
+    document.getElementById('name-error').classList.remove('show');
+    document.getElementById('dup-msg').classList.remove('show');
+    // Si cambian el nombre, resetear estado de verificación
+    memberStatus = null;
+    document.getElementById('new-member-banner').classList.remove('show');
+    document.getElementById('extended-fields').style.display = 'none';
+    document.querySelector('#submit-btn .label').innerHTML =
+      '<i class="fas fa-paper-plane"></i> Registrar asistencia';
+  });
+
+  // ─── Autocompletado (nombres guardados localmente) ────────
+  function loadPastNames() {
+    const names    = JSON.parse(localStorage.getItem('known_names') || '[]');
+    const datalist = document.getElementById('past-names');
+    names.forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n;
+      datalist.appendChild(opt);
+    });
+  }
+
+  function savePastName(name) {
+    try {
+      const names = JSON.parse(localStorage.getItem('known_names') || '[]');
+      if (!names.includes(name)) {
+        names.push(name);
+        localStorage.setItem('known_names', JSON.stringify(names));
+      }
+    } catch(e) {}
+  }
+</script>
+</body>
+</html>

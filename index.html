@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar Sesión – Sistema de Asistencia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Firebase v8 SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <!-- App config -->
+  <script src="config.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #6C3DE0; --p-dark: #4A1FA8; --accent: #00BCD4;
+      --success: #4CAF50; --danger: #EF5350;
+      --bg: #F0EDFF; --card: #fff; --text: #1a1a2e; --muted: #888; --border: #e8e8ee;
+      --shadow: 0 8px 32px rgba(108,61,224,.18);
+    }
+    body {
+      font-family: 'Poppins', sans-serif; min-height: 100vh;
+      background: linear-gradient(160deg, #4A1FA8 0%, #6C3DE0 50%, #00BCD4 100%);
+      display: flex; align-items: center; justify-content: center; padding: 24px 16px;
+    }
+    .login-card {
+      background: var(--card); border-radius: 24px; width: 100%; max-width: 400px;
+      box-shadow: var(--shadow); overflow: hidden;
+    }
+    .login-header {
+      background: linear-gradient(135deg, var(--p-dark), var(--primary));
+      padding: 32px 28px 24px; text-align: center; color: #fff;
+    }
+    .login-logo {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: rgba(255,255,255,.18); display: inline-flex;
+      align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 14px;
+    }
+    .login-header h1  { font-size: 1.3rem; font-weight: 700; }
+    .login-header p   { font-size: .82rem; opacity: .75; margin-top: 4px; }
+    .login-body { padding: 28px; }
+    .field { margin-bottom: 20px; }
+    .field label { display: block; font-size: .82rem; font-weight: 600; color: #444; margin-bottom: 7px; }
+    .input-wrap { position: relative; }
+    .input-wrap i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #bbb; font-size: .95rem; }
+    .input-wrap input {
+      width: 100%; padding: 13px 14px 13px 40px;
+      border: 2px solid var(--border); border-radius: 10px;
+      font-family: inherit; font-size: .92rem; color: var(--text);
+      transition: border-color .2s, box-shadow .2s; outline: none;
+    }
+    .input-wrap input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(108,61,224,.12); }
+    .btn-login {
+      width: 100%; padding: 14px; border: none; border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--p-dark));
+      color: #fff; font-family: inherit; font-size: .95rem; font-weight: 600;
+      cursor: pointer; transition: opacity .2s, transform .1s; margin-top: 4px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-login:hover:not(:disabled) { opacity: .92; transform: translateY(-1px); }
+    .btn-login:disabled { opacity: .6; cursor: not-allowed; }
+    .error-msg {
+      background: #ffeaea; border: 1px solid #f5b8b8; color: #c0392b;
+      border-radius: 8px; padding: 10px 14px; font-size: .82rem; margin-top: 14px;
+      display: none;
+    }
+    .error-msg.show { display: block; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .login-footer { text-align: center; padding: 0 28px 24px; font-size: .75rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="login-header">
+    <div class="login-logo">⛪</div>
+    <h1>Sistema de Asistencia</h1>
+    <p>Juventudes CV — Panel de coordinadores</p>
+  </div>
+  <div class="login-body">
+    <div class="field">
+      <label for="username">Usuario</label>
+      <div class="input-wrap">
+        <i class="fa-solid fa-user"></i>
+        <input type="text" id="username" placeholder="Tu usuario" autocomplete="username">
+      </div>
+    </div>
+    <div class="field">
+      <label for="password">Contraseña</label>
+      <div class="input-wrap">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+    </div>
+    <button class="btn-login" id="btn-login" onclick="doLogin()">
+      <i class="fa-solid fa-right-to-bracket"></i> Ingresar
+    </button>
+    <div class="error-msg" id="error-msg"></div>
+  </div>
+  <div class="login-footer">
+    <i class="fa-brands fa-google" style="color:#4285F4"></i> Sincronizado con Firebase
+  </div>
+</div>
+
+<script>
+  // ── Firebase init (safe: evita "App already exists" al recargar) ─
+  if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+  const db       = firebase.firestore();
+  const coordCol = db.collection('coordinators');
+
+  // Enter on password field
+  document.getElementById('password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+  document.getElementById('username').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('password').focus();
+  });
+
+  async function doLogin() {
+    const username = document.getElementById('username').value.trim().toLowerCase();
+    const password = document.getElementById('password').value;
+    const btn      = document.getElementById('btn-login');
+    const errEl    = document.getElementById('error-msg');
+
+    if (!username || !password) {
+      showError('Completa usuario y contraseña.');
+      return;
+    }
+
+    // Show spinner
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Verificando…';
+    errEl.classList.remove('show');
+
+    try {
+      // 1) Try Firestore coordinators collection
+      const snap = await coordCol.doc(username).get();
+      if (snap.exists) {
+        const data = snap.data();
+        if (data.password === password) {
+          saveSession(username, data.name || username, data.role || 'coordinator');
+          return;
+        } else {
+          showError('Contraseña incorrecta.');
+          resetBtn();
+          return;
+        }
+      }
+
+      // 2) Fallback to local config.js COORDINATORS array
+      const local = (typeof COORDINATORS !== 'undefined')
+        ? COORDINATORS.find(c => c.username.toLowerCase() === username && c.password === password)
+        : null;
+
+      if (local) {
+        // Auto-seed to Firestore so future logins are cloud-first
+        try {
+          await coordCol.doc(username).set({
+            username: local.username,
+            name:     local.name || local.username,
+            role:     local.role || 'coordinator',
+            password: local.password,
+            seeded:   true,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+        } catch (_) { /* ignore seed errors */ }
+        saveSession(username, local.name || username, local.role || 'coordinator');
+        return;
+      }
+
+      showError('Usuario o contraseña incorrectos.');
+      resetBtn();
+
+    } catch (err) {
+      console.error('Login error:', err);
+      // Offline fallback
+      const local = (typeof COORDINATORS !== 'undefined')
+        ? COORDINATORS.find(c => c.username.toLowerCase() === username && c.password === password)
+        : null;
+      if (local) {
+        saveSession(username, local.name || username, local.role || 'coordinator');
+      } else {
+        showError('Error de conexión. Verifica tu internet.');
+        resetBtn();
+      }
+    }
+  }
+
+  function saveSession(username, name, role) {
+    sessionStorage.setItem('coord_user', username);
+    sessionStorage.setItem('coord_name', name);
+    sessionStorage.setItem('coord_role', role);
+    window.location.href = 'dashboard.html';
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  function resetBtn() {
+    const btn = document.getElementById('btn-login');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Ingresar';
+  }
+</script>
+</body>
+</html>

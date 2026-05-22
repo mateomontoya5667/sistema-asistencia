@@ -1,0 +1,16 @@
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# Node (por si se instala algo local)
+node_modules/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Variables de entorno / secretos locales
+.env
+.env.*
