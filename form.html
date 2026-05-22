@@ -128,21 +128,13 @@
 
     /* ─── Logo en header del formulario ─────────────────────────── */
     .form-logo-frame {
-      display: flex; flex-direction: column; align-items: center;
-      margin-bottom: 12px;
+      display: flex; justify-content: center;
+      margin-bottom: 10px;
     }
-    .form-logo-brand-txt {
-      font-size: .72rem; font-weight: 700; letter-spacing: .14em;
-      text-transform: uppercase; color: rgba(255,255,255,.95);
-      margin-bottom: 4px; text-shadow: 0 1px 4px rgba(0,0,0,.2);
-    }
-    .form-logo-clip {
-      overflow: hidden; height: 66px; width: 148px;
-      border-radius: 8px; background: rgba(255,255,255,.1);
-    }
-    .form-logo-clip img {
-      width: 148px; margin-top: -20px;
-      mix-blend-mode: multiply; display: block;
+    .form-logo-frame img {
+      width: 150px;
+      mix-blend-mode: multiply;
+      display: block;
     }
 
     #screen-success { padding: 48px 28px; text-align: center; }
@@ -191,10 +183,7 @@
   <div id="screen-form" class="screen">
     <div class="card-header">
       <div class="form-logo-frame">
-        <span class="form-logo-brand-txt">Juventudes</span>
-        <div class="form-logo-clip">
-          <img src="LOGO.jpeg" alt="Juventudes Creo en Vos">
-        </div>
+        <img src="LOGO.jpeg" alt="Creo en Vos">
       </div>
       <div class="tag"><i class="fas fa-check-circle"></i> Registro de asistencia</div>
       <h1 id="event-title">—</h1>

@@ -46,12 +46,14 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);dis
   transition:transform .3s;z-index:200;
 }
 .sb-brand{
-  display:flex;align-items:center;gap:10px;padding:14px 16px 12px;
-  font-weight:700;font-size:.78rem;color:#fff;border-bottom:1px solid rgba(255,255,255,.1);
-  line-height:1.3;
+  display:flex;flex-direction:column;align-items:center;
+  padding:18px 16px 14px;
+  border-bottom:1px solid rgba(255,255,255,.15);
 }
-.sb-logo-sm{overflow:hidden;height:38px;width:86px;border-radius:6px;background:rgba(255,255,255,.1);flex-shrink:0;}
-.sb-logo-sm img{width:86px;margin-top:-10px;mix-blend-mode:multiply;display:block;}
+.sb-logo-main{display:flex;justify-content:center;width:100%;}
+.sb-logo-main img{width:140px;mix-blend-mode:multiply;display:block;}
+.sb-brand-name{font-size:.7rem;font-weight:600;color:rgba(255,255,255,.75);
+  text-align:center;margin-top:6px;letter-spacing:.04em;line-height:1.3;}
 /* ── Profile section – más prominente ── */
 .sb-profile{
   padding:18px 16px 16px;border-bottom:1px solid rgba(255,255,255,.15);
@@ -110,12 +112,14 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);dis
 /* ─── Top bar ────────────────────────────────────────────────── */
 .topbar{
   background:#fff;border-bottom:1px solid var(--border);
-  padding:0 24px;height:56px;display:flex;align-items:center;
+  padding:0 24px;height:60px;display:flex;align-items:center;
   justify-content:space-between;flex-shrink:0;
   box-shadow:0 1px 6px rgba(0,0,0,.06);
 }
 .topbar-title{font-size:1rem;font-weight:700;color:var(--p-dark);display:flex;align-items:center;gap:8px;}
 .topbar-title i{color:var(--primary);}
+.topbar-logo{display:flex;align-items:center;}
+.topbar-logo img{height:46px;mix-blend-mode:multiply;display:block;}
 .topbar-right{display:flex;align-items:center;gap:8px;}
 
 /* ─── Content area ───────────────────────────────────────────── */
@@ -295,8 +299,8 @@ tr.new-row td{animation:rowIn .3s ease;}
 <!-- ══ SIDEBAR ═══════════════════════════════════════════════════ -->
 <aside class="sidebar" id="sidebar">
   <div class="sb-brand">
-    <div class="sb-logo-sm"><img src="LOGO.jpeg" alt="Logo"></div>
-    <span>Asistencia<br>Juventudes CV</span>
+    <div class="sb-logo-main"><img src="LOGO.jpeg" alt="Creo en Vos"></div>
+    <div class="sb-brand-name">Asistencia Juventudes CV</div>
   </div>
 
   <div class="sb-profile" onclick="openModal('modal-profile')" title="Editar perfil">
@@ -340,6 +344,9 @@ tr.new-row td{animation:rowIn .3s ease;}
   <div class="topbar">
     <div class="topbar-title" id="topbar-title">
       <i class="fa-solid fa-house"></i> Panel
+    </div>
+    <div class="topbar-logo">
+      <img src="LOGO.jpeg" alt="Creo en Vos">
     </div>
     <div class="topbar-right">
       <span id="sess-status-top" style="font-size:.78rem;color:var(--muted)"></span>
