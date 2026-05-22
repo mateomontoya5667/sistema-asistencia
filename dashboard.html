@@ -571,6 +571,25 @@ tr.new-row td{animation:rowIn .3s ease;}
   </div>
 </div>
 
+<!-- Editar coordinador -->
+<div class="overlay" id="modal-editcoord" onclick="closeModal('modal-editcoord')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title"><i class="fa-solid fa-user-pen"></i> Editar coordinador <button class="modal-close" onclick="closeModal('modal-editcoord')">✕</button></div>
+    <div style="background:#f8f7ff;border-radius:9px;padding:10px 13px;font-size:.8rem;color:var(--muted);margin-bottom:14px">
+      Usuario: <strong id="ec-user-display">—</strong>
+    </div>
+    <div class="mfield"><label>Nombre completo</label><input type="text" id="ec-name" placeholder="Nombre del coordinador"></div>
+    <div class="mfield"><label>Rol</label><select id="ec-role"><option value="coordinator">Coordinador</option><option value="admin">Administrador</option></select></div>
+    <div class="mfield">
+      <label>Nueva contraseña <span style="font-size:.7rem;color:var(--muted)">(dejar vacío = no cambiar)</span></label>
+      <input type="password" id="ec-pass" placeholder="Nueva contraseña">
+    </div>
+    <div class="mfield"><label>Confirmar contraseña</label><input type="password" id="ec-pass-confirm" placeholder="Repetir contraseña"></div>
+    <div class="merr" id="editcoord-err"></div>
+    <button class="btn btn-primary btn-full" onclick="saveEditCoord()"><i class="fa-solid fa-floppy-disk"></i> Guardar cambios</button>
+  </div>
+</div>
+
 <!-- Lista completa stats -->
 <div class="overlay" id="modal-fulllist" onclick="closeModal('modal-fulllist')">
   <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
@@ -1012,6 +1031,9 @@ async function loadCoordList(){
         <div class="coord-av">${(c.name||d.id)[0].toUpperCase()}</div>
         <div class="coord-info"><div class="cn">${c.name||d.id}${self?' <span style="font-size:.65rem;color:var(--accent)">(tú)</span>':''}</div><div class="cu">@${d.id}</div></div>
         <span class="role-badge ${c.role||'coordinator'}">${c.role==='admin'?'Admin':'Coord.'}</span>
+        <button class="btn-ghost btn" style="padding:5px 9px;font-size:.72rem" onclick="openEditCoord('${d.id}','${(c.name||'').replace(/'/g,"\\'")}','${c.role||'coordinator'}')">
+          <i class="fa-solid fa-pen"></i>
+        </button>
         ${self?'':`<button class="btn-del" onclick="delCoord('${d.id}',this)"><i class="fa-solid fa-trash"></i></button>`}
       </div>`;
     }).join('');
@@ -1039,6 +1061,39 @@ async function delCoord(uid,btn){
   if(!confirm(`¿Eliminar al coordinador "${uid}"?`))return;
   try{await coordCol.doc(uid).delete();btn.closest('.coord-item').remove();}
   catch(e){alert('Error: '+e.message);}
+}
+
+function openEditCoord(uid, name, role){
+  document.getElementById('ec-user-display').textContent = uid;
+  document.getElementById('ec-name').value         = name;
+  document.getElementById('ec-role').value         = role;
+  document.getElementById('ec-pass').value         = '';
+  document.getElementById('ec-pass-confirm').value = '';
+  document.getElementById('editcoord-err').classList.remove('show');
+  document.getElementById('modal-editcoord').dataset.uid = uid;
+  openModal('modal-editcoord');
+}
+
+async function saveEditCoord(){
+  const uid  = document.getElementById('modal-editcoord').dataset.uid;
+  const name = document.getElementById('ec-name').value.trim();
+  const role = document.getElementById('ec-role').value;
+  const pass = document.getElementById('ec-pass').value;
+  const conf = document.getElementById('ec-pass-confirm').value;
+  const err  = document.getElementById('editcoord-err');
+  err.classList.remove('show');
+
+  if(!name){err.textContent='El nombre no puede estar vacío.';err.classList.add('show');return;}
+  if(pass && pass.length < 6){err.textContent='La contraseña debe tener al menos 6 caracteres.';err.classList.add('show');return;}
+  if(pass && pass !== conf){err.textContent='Las contraseñas no coinciden.';err.classList.add('show');return;}
+
+  try {
+    const upd = {name, role};
+    if(pass) upd.password = pass;
+    await coordCol.doc(uid).update(upd);
+    closeModal('modal-editcoord');
+    loadCoordList();
+  } catch(e){err.textContent='Error: '+e.message;err.classList.add('show');}
 }
 
 // ── Profile ───────────────────────────────────────────────────────
