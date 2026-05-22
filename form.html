@@ -317,7 +317,7 @@
   // ─── Init ─────────────────────────────────────────────────
   (async function init() {
     const params    = new URLSearchParams(location.search);
-    const sessionId = params.get('s');
+    const sessionId = params.get('sid') || params.get('s'); // compatible con ambos formatos
 
     if (!sessionId) {
       showError('Enlace inválido', 'No se encontró el identificador de sesión.');
@@ -338,33 +338,45 @@
 
       const session = { id: docSnap.id, ...docSnap.data() };
 
-      if (!session.active) {
+      // Compatibilidad: soporta status:'active' (nuevo) y active:true (viejo)
+      const isActive = session.status === 'active' || session.active === true;
+      if (!isActive) {
         showError('Sesión cerrada', 'El coordinador cerró esta sesión de asistencia.');
         return;
       }
 
-      if (Date.now() > session.expiresAt) {
-        showError('QR expirado', 'Este código QR ya venció. Pide al coordinador que genere uno nuevo.');
+      // Compatibilidad: soporta endsAt (nuevo Timestamp) y expiresAt (viejo número)
+      const endsAtMs = session.endsAt?.toMillis
+        ? session.endsAt.toMillis()
+        : (session.endsAt?.seconds ? session.endsAt.seconds * 1000 : session.expiresAt || Infinity);
+
+      if (Date.now() > endsAtMs) {
+        showError('QR expirado', 'Este código QR ya venció. Pide al coordinador que extienda el tiempo.');
         return;
       }
 
-      sessionData = session;
+      sessionData = { ...session, _endsAtMs: endsAtMs };
 
-      document.getElementById('event-title').textContent       = session.eventName       || 'Reunión';
-      document.getElementById('event-leader-name').textContent = session.eventLeader     || '—';
-      document.getElementById('coord-name').textContent        = session.coordinatorName || '—';
-      document.getElementById('event-date').textContent        = session.date            || '';
+      // Compatibilidad de nombres de campo (nuevo → viejo)
+      const eventName = session.evento || session.eventName || 'Reunión';
+      const leader    = session.leader || session.eventLeader || '';
+      const desc      = session.descripcion || session.eventDescription || '';
 
-      if (!session.eventLeader) {
+      document.getElementById('event-title').textContent       = eventName;
+      document.getElementById('event-leader-name').textContent = leader || '—';
+      document.getElementById('coord-name').textContent        = session.createdBy || session.coordinatorName || '—';
+      document.getElementById('event-date').textContent        = session.date || '';
+
+      if (!leader) {
         document.getElementById('leader-row').style.display = 'none';
       }
-      if (session.eventDescription) {
-        document.getElementById('event-desc-text').textContent   = session.eventDescription;
+      if (desc) {
+        document.getElementById('event-desc-text').textContent   = desc;
         document.getElementById('event-desc-wrap').style.display = 'block';
       }
 
       loadPastNames();
-      startTimer(session.expiresAt);
+      startTimer(endsAtMs);
       showScreen('screen-form');
       document.getElementById('name').focus();
 
@@ -416,7 +428,7 @@
     document.getElementById('name-error').classList.remove('show');
     document.getElementById('dup-msg').classList.remove('show');
 
-    if (!sessionData || Date.now() > sessionData.expiresAt) {
+    if (!sessionData || Date.now() > sessionData._endsAtMs) {
       showError('QR expirado', 'El tiempo se agotó. Pide un nuevo código al coordinador.');
       return;
     }
@@ -542,7 +554,7 @@
     savePastName(name);
     clearInterval(timerInterval);
     document.getElementById('success-name').textContent  = name;
-    document.getElementById('success-event').textContent = sessionData.eventName || 'Reunión';
+    document.getElementById('success-event').textContent = sessionData.evento || sessionData.eventName || 'Reunión';
     if (isNew) document.getElementById('success-new-badge').style.display = 'inline-flex';
     showScreen('screen-success');
   }
