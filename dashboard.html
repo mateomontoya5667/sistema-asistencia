@@ -277,6 +277,31 @@ tr.new-row td{animation:rowIn .3s ease;}
 .btn-full{width:100%;justify-content:center;margin-top:6px;}
 .muted-text{color:var(--muted);font-size:.83rem;text-align:center;padding:16px 0;}
 
+/* ─── Participants modals ───────────────────────────────────── */
+.modal-search-row{display:flex;gap:8px;margin-bottom:10px;}
+.modal-search{flex:1;padding:9px 12px;border:2px solid var(--border);border-radius:9px;
+  font-family:inherit;font-size:.84rem;outline:none;transition:border-color .2s;}
+.modal-search:focus{border-color:var(--primary);}
+.modal-filter{padding:9px 10px;border:2px solid var(--border);border-radius:9px;
+  font-family:inherit;font-size:.82rem;outline:none;background:#fff;transition:border-color .2s;cursor:pointer;}
+.modal-filter:focus{border-color:var(--primary);}
+.modal-count{font-size:.74rem;color:var(--muted);margin-bottom:10px;}
+.modal-scroll{max-height:420px;overflow-y:auto;}
+.mcard{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.mcard:last-child{border-bottom:none;}
+.mcard-av{width:36px;height:36px;border-radius:50%;font-size:.78rem;font-weight:700;
+  color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mcard-body{flex:1;min-width:0;}
+.mcard-name{font-weight:700;font-size:.86rem;color:var(--p-dark);}
+.mcard-meta{font-size:.72rem;color:var(--muted);line-height:1.6;margin-top:2px;}
+.mcard-right{text-align:right;flex-shrink:0;}
+.mcard-count{font-size:.82rem;font-weight:700;color:var(--primary);}
+.mcard-time{font-size:.67rem;color:var(--muted);}
+/* ─── Last session panel card ──────────────────────────────── */
+.last-sess-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.last-sess-title{font-size:.9rem;font-weight:700;color:var(--p-dark);flex:1;min-width:0;}
+.last-sess-chip{display:inline-flex;align-items:center;gap:5px;background:#ffd6ec;
+  color:var(--p-dark);border-radius:20px;padding:4px 12px;font-size:.72rem;font-weight:600;white-space:nowrap;}
 /* ─── Responsive ─────────────────────────────────────────────── */
 @media(max-width:720px){
   .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);}
@@ -367,6 +392,28 @@ tr.new-row td{animation:rowIn .3s ease;}
           <button class="btn btn-primary" onclick="openCreateSession()">
             <i class="fa-solid fa-play"></i> Iniciar sesión
           </button>
+        </div>
+        <!-- Última actividad -->
+        <div id="last-session-card" class="card" style="display:none">
+          <div class="last-sess-header">
+            <div class="last-sess-title">
+              <i class="fa-solid fa-clock-rotate-left" style="color:var(--primary)"></i>
+              Última actividad: <span id="last-sess-name"></span>
+            </div>
+            <div class="last-sess-chip"><i class="fa-solid fa-calendar"></i> <span id="last-sess-date"></span></div>
+            <span style="font-size:.74rem;color:var(--muted)">
+              <strong id="last-sess-count">0</strong> asistentes &nbsp;·&nbsp;
+              <strong id="last-sess-new">0</strong> nuevos
+            </span>
+          </div>
+          <div class="table-wrap">
+            <table class="att-table">
+              <thead><tr><th>#</th><th>Nombre</th><th>Teléfono</th><th>Estado</th><th>Hora</th></tr></thead>
+              <tbody id="last-att-tbody">
+                <tr><td colspan="5" class="empty-table"><i class="fa-solid fa-spinner"></i> Cargando…</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -502,7 +549,12 @@ tr.new-row td{animation:rowIn .3s ease;}
     <!-- ── PAGE: HISTORY ──────────────────────────────────────── -->
     <div class="page" id="page-history">
       <div class="card">
-        <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Historial de sesiones</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+          <div class="card-title" style="margin-bottom:0"><i class="fa-solid fa-clock-rotate-left"></i> Historial de sesiones</div>
+          <button class="btn btn-primary" style="font-size:.78rem;padding:8px 14px" onclick="openAllMembers()">
+            <i class="fa-solid fa-address-book"></i> Lista de participantes
+          </button>
+        </div>
         <div id="hist-list"><div class="muted-text">Cargando…</div></div>
       </div>
     </div>
@@ -601,6 +653,50 @@ tr.new-row td{animation:rowIn .3s ease;}
   </div>
 </div>
 
+<!-- Asistentes de sesión histórica -->
+<div class="overlay" id="modal-session-att" onclick="closeModal('modal-session-att')">
+  <div class="modal" style="max-width:520px" onclick="event.stopPropagation()">
+    <div class="modal-title">
+      <i class="fa-solid fa-users" style="flex-shrink:0"></i>
+      <div style="flex:1;min-width:0;overflow:hidden">
+        <div id="sa-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Asistentes</div>
+        <div id="sa-subtitle" style="font-size:.7rem;font-weight:400;color:var(--muted)"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-session-att')">✕</button>
+    </div>
+    <div class="modal-search-row">
+      <input class="modal-search" id="sa-search" placeholder="Buscar por nombre…" oninput="filterSessionAtt()">
+      <select class="modal-filter" id="sa-filter" onchange="filterSessionAtt()">
+        <option value="all">Todos</option>
+        <option value="new">Nuevos</option>
+        <option value="existing">Miembros</option>
+      </select>
+    </div>
+    <div class="modal-count" id="sa-count"></div>
+    <div class="modal-scroll" id="sa-list"><div class="muted-text">Cargando…</div></div>
+  </div>
+</div>
+
+<!-- Todos los participantes registrados -->
+<div class="overlay" id="modal-all-members" onclick="closeModal('modal-all-members')">
+  <div class="modal" style="max-width:540px" onclick="event.stopPropagation()">
+    <div class="modal-title">
+      <i class="fa-solid fa-address-book"></i> Participantes registrados
+      <button class="modal-close" onclick="closeModal('modal-all-members')">✕</button>
+    </div>
+    <div class="modal-search-row">
+      <input class="modal-search" id="am-search" placeholder="Buscar por nombre o teléfono…" oninput="filterAllMembers()">
+      <select class="modal-filter" id="am-filter" onchange="filterAllMembers()">
+        <option value="top">Más frecuentes</option>
+        <option value="recent">Más recientes</option>
+        <option value="az">A → Z</option>
+      </select>
+    </div>
+    <div class="modal-count" id="am-count"></div>
+    <div class="modal-scroll" id="am-list"><div class="muted-text">Cargando…</div></div>
+  </div>
+</div>
+
 <!-- Lista completa stats -->
 <div class="overlay" id="modal-fulllist" onclick="closeModal('modal-fulllist')">
   <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
@@ -662,6 +758,8 @@ let statsMembers = [];
       activeSession = snap.docs[0].data();
       showActive();
       startListening(activeSid);
+    } else {
+      loadLastSessionCard();
     }
     await loadHistory();
     if (cRole==='admin') loadCoordList();
@@ -781,6 +879,7 @@ async function closeSession(){
     renderTable([]);
     document.getElementById('count-badge').textContent='0';
     await loadHistory();
+    loadLastSessionCard();
   } catch(e){ alert('Error: '+e.message); }
 }
 
@@ -1009,12 +1108,17 @@ async function loadHistory(){
       const s=d.data();
       const date=s.closedAt?.toDate?s.closedAt.toDate().toLocaleDateString('es-CR'):'—';
       const time=s.closedAt?.toDate?s.closedAt.toDate().toLocaleTimeString('es-CR',{hour:'2-digit',minute:'2-digit'}):'';
+      const evtSafe=(s.evento||'Sin nombre').replace(/'/g,"\\'");
       return `<div class="hist-item">
         <div class="hist-icon">📋</div>
         <div class="hist-info">
           <div class="ht">${s.evento||'Sin nombre'} — ${date} ${time}</div>
           <div class="hm">${s.totalAttendees||0} asistentes · ${s.totalNew||0} nuevos · Líder: ${s.leader||'—'}</div>
         </div>
+        <button class="btn btn-ghost" style="padding:5px 10px;font-size:.72rem;white-space:nowrap"
+          onclick="openSessionAtt('${d.id}','${evtSafe}','${date} ${time}')">
+          <i class="fa-solid fa-users"></i> Ver lista
+        </button>
         <button class="btn-hdel" onclick="delHist('${d.id}',this)"><i class="fa-solid fa-trash"></i></button>
       </div>`;
     }).join('');
@@ -1187,6 +1291,132 @@ function exportPDF(){
 function doLogout(){
   if(unsubListener)unsubListener();clearInterval(timerInterval);
   sessionStorage.clear();location.href='index.html';
+}
+
+// ── Last session card (panel sin sesión activa) ───────────────────
+async function loadLastSessionCard(){
+  try {
+    const snap=await sessCol.where('status','==','closed').orderBy('closedAt','desc').limit(1).get();
+    if(snap.empty) return;
+    const doc=snap.docs[0];const s=doc.data();
+    document.getElementById('last-sess-name').textContent=s.evento||'Sin nombre';
+    const date=s.closedAt?.toDate?s.closedAt.toDate().toLocaleDateString('es-CR',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
+    document.getElementById('last-sess-date').textContent=date;
+    const attSnap=await attColRef(doc.id).orderBy('registeredAt','asc').get();
+    const atts=attSnap.docs.map(d=>({id:d.id,...d.data()}));
+    document.getElementById('last-sess-count').textContent=atts.length;
+    document.getElementById('last-sess-new').textContent=atts.filter(a=>a.isNew).length;
+    const tbody=document.getElementById('last-att-tbody');
+    if(!atts.length){
+      tbody.innerHTML='<tr><td colspan="5" class="empty-table"><i class="fa-solid fa-users"></i>Sin asistentes.</td></tr>';
+    } else {
+      tbody.innerHTML=atts.map((a,i)=>{
+        const ts=a.registeredAt?.toDate?a.registeredAt.toDate():(typeof a.registeredAt==='number'?new Date(a.registeredAt):null);
+        const t=ts?ts.toLocaleTimeString('es-CR',{hour:'2-digit',minute:'2-digit'}):'';
+        const ini=a.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+        const badge=a.isNew?'<span class="badge-new">Nuevo</span>':'<span class="badge-exist">Miembro</span>';
+        return `<tr><td>${i+1}</td>
+          <td><div class="td-name"><div class="att-av-sm" style="background:${colorFor(a.name)}">${ini}</div>${a.name}</div></td>
+          <td>${a.phone||'—'}</td><td>${badge}</td><td>${t}</td></tr>`;
+      }).join('');
+    }
+    document.getElementById('last-session-card').style.display='';
+  } catch(e){console.error('lastSessionCard:',e);}
+}
+
+// ── Session attendees modal (desde historial) ─────────────────────
+let saAllData=[];
+async function openSessionAtt(sid,eventName,dateStr){
+  document.getElementById('sa-title').textContent=eventName||'Asistentes';
+  document.getElementById('sa-subtitle').textContent=dateStr;
+  document.getElementById('sa-search').value='';
+  document.getElementById('sa-filter').value='all';
+  document.getElementById('sa-list').innerHTML='<div class="muted-text">Cargando…</div>';
+  openModal('modal-session-att');
+  try {
+    const snap=await attColRef(sid).orderBy('registeredAt','asc').get();
+    saAllData=snap.docs.map(d=>({id:d.id,...d.data()}));
+    filterSessionAtt();
+  } catch(e){document.getElementById('sa-list').innerHTML='<div class="muted-text">Error al cargar.</div>';}
+}
+function filterSessionAtt(){
+  const q=document.getElementById('sa-search').value.toLowerCase().trim();
+  const f=document.getElementById('sa-filter').value;
+  const list=saAllData.filter(a=>{
+    if(q&&!a.name.toLowerCase().includes(q))return false;
+    if(f==='new'&&!a.isNew)return false;
+    if(f==='existing'&&a.isNew)return false;
+    return true;
+  });
+  document.getElementById('sa-count').textContent=`${list.length} de ${saAllData.length} participante${saAllData.length!==1?'s':''}`;
+  const el=document.getElementById('sa-list');
+  if(!list.length){el.innerHTML='<div class="muted-text">Sin resultados.</div>';return;}
+  el.innerHTML=list.map((a,i)=>{
+    const ts=a.registeredAt?.toDate?a.registeredAt.toDate():(typeof a.registeredAt==='number'?new Date(a.registeredAt):null);
+    const t=ts?ts.toLocaleTimeString('es-CR',{hour:'2-digit',minute:'2-digit'}):'';
+    const ini=a.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const badge=a.isNew?'<span class="badge-new">Nuevo</span>':'<span class="badge-exist">Miembro</span>';
+    return `<div class="mcard">
+      <div class="mcard-av" style="background:${colorFor(a.name)}">${ini}</div>
+      <div class="mcard-body">
+        <div class="mcard-name">${a.name}</div>
+        <div class="mcard-meta"><i class="fa-solid fa-phone" style="font-size:.6rem"></i> ${a.phone||'—'} &nbsp; ${badge}</div>
+      </div>
+      <div class="mcard-right"><div class="mcard-count">#${i+1}</div><div class="mcard-time">${t}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ── All members modal (desde historial) ──────────────────────────
+let amAllData=[];
+async function openAllMembers(){
+  document.getElementById('am-search').value='';
+  document.getElementById('am-filter').value='top';
+  document.getElementById('am-list').innerHTML='<div class="muted-text">Cargando…</div>';
+  document.getElementById('am-count').textContent='';
+  openModal('modal-all-members');
+  try {
+    const snap=await memberCol.orderBy('attendanceCount','desc').get();
+    amAllData=snap.docs.map(d=>({id:d.id,...d.data()}));
+    filterAllMembers();
+  } catch(e){document.getElementById('am-list').innerHTML='<div class="muted-text">Error al cargar.</div>';}
+}
+function filterAllMembers(){
+  const q=document.getElementById('am-search').value.toLowerCase().trim();
+  const f=document.getElementById('am-filter').value;
+  let list=[...amAllData].filter(m=>!q||(m.name||'').toLowerCase().includes(q)||(m.phone||'').includes(q));
+  if(f==='recent')list.sort((a,b)=>(b.lastSeen||0)-(a.lastSeen||0));
+  else if(f==='top')list.sort((a,b)=>(b.attendanceCount||0)-(a.attendanceCount||0));
+  else list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  document.getElementById('am-count').textContent=`${list.length} de ${amAllData.length} participante${amAllData.length!==1?'s':''}`;
+  const el=document.getElementById('am-list');
+  if(!list.length){el.innerHTML='<div class="muted-text">Sin resultados.</div>';return;}
+  el.innerHTML=list.map(m=>{
+    const ini=(m.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const toDate=v=>typeof v==='number'?new Date(v).toLocaleDateString('es-CR'):(v?.toDate?v.toDate().toLocaleDateString('es-CR'):'—');
+    const firstDate=toDate(m.firstSeen);
+    const lastDate=toDate(m.lastSeen);
+    return `<div class="mcard">
+      <div class="mcard-av" style="background:${colorFor(m.name||'')}">${ini}</div>
+      <div class="mcard-body">
+        <div class="mcard-name">${m.name||'—'}</div>
+        <div class="mcard-meta">
+          <i class="fa-solid fa-phone" style="font-size:.6rem"></i> ${m.phone||'—'}
+          ${m.responsibleAdult?`&nbsp;·&nbsp;<i class="fa-solid fa-user-shield" style="font-size:.6rem"></i> ${m.responsibleAdult}`:''}
+        </div>
+        ${m.emergencyContact?`<div class="mcard-meta"><i class="fa-solid fa-phone-alt" style="font-size:.6rem"></i> Emergencia: ${m.emergencyContact}</div>`:''}
+        <div class="mcard-meta">
+          <i class="fa-regular fa-calendar" style="font-size:.6rem"></i> Primera vez: ${firstDate}
+          &nbsp;·&nbsp;
+          <i class="fa-solid fa-clock" style="font-size:.6rem"></i> Último: ${lastDate}
+        </div>
+      </div>
+      <div class="mcard-right">
+        <div class="mcard-count">${m.attendanceCount||0}×</div>
+        <div class="mcard-time">asistencias</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ── Modal helpers ─────────────────────────────────────────────────
