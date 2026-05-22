@@ -9,14 +9,14 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --primary: #6C3DE0; --p-dark: #4A1FA8; --accent: #00BCD4;
+      --primary: #E8178A; --p-dark: #C0146F; --accent: #FF6EB4;
       --success: #4CAF50; --danger: #EF5350; --warning: #FF9800;
-      --bg: #F0EDFF; --card: #fff; --text: #1a1a2e; --muted: #888; --border: #e8e8ee;
-      --shadow: 0 8px 32px rgba(108,61,224,.15);
+      --bg: #FFF0F7; --card: #fff; --text: #1a1a2e; --muted: #888; --border: #f0d0e4;
+      --shadow: 0 8px 32px rgba(232,23,138,.15);
     }
     body {
       font-family: 'Poppins', sans-serif; min-height: 100vh;
-      background: linear-gradient(160deg, #4A1FA8 0%, #6C3DE0 45%, #00BCD4 100%);
+      background: linear-gradient(160deg, #7A0050 0%, #C0146F 45%, #E8178A 100%);
       display: flex; align-items: flex-start; justify-content: center;
       padding: 32px 16px 60px;
     }
@@ -51,14 +51,14 @@
       font-family: 'Poppins', sans-serif; font-size: .92rem; color: var(--text);
       outline: none; transition: border-color .2s, box-shadow .2s;
     }
-    .input-wrap input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(108,61,224,.1); }
+    .input-wrap input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(232,23,138,.1); }
     .input-wrap input.error { border-color: var(--danger); }
     .field-error { font-size: .75rem; color: var(--danger); margin-top: 5px; display: none; }
     .field-error.show { display: block; }
 
     /* Nuevos miembros */
     .new-member-banner {
-      background: linear-gradient(135deg, #ede7ff, #e8f5ff);
+      background: linear-gradient(135deg, #ffe0f0, #fff0f7);
       border-left: 4px solid var(--primary); border-radius: 10px;
       padding: 12px 16px; font-size: .82rem; color: var(--text);
       margin-bottom: 18px; display: none;
@@ -107,7 +107,7 @@
 
     #screen-loading { padding: 64px 28px; text-align: center; }
     .loader {
-      width: 48px; height: 48px; border: 4px solid #ede7ff;
+      width: 48px; height: 48px; border: 4px solid #ffd6ec;
       border-top-color: var(--primary); border-radius: 50%;
       animation: spin .7s linear infinite; margin: 0 auto 16px;
     }
@@ -122,8 +122,27 @@
     #screen-error h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
     #screen-error p  { font-size: .85rem; color: var(--muted); line-height: 1.6; }
     .error-hint {
-      margin-top: 18px; background: #f4f0ff; border-radius: 10px;
+      margin-top: 18px; background: #fff0f7; border-radius: 10px;
       padding: 12px 16px; font-size: .78rem; color: var(--primary); line-height: 1.5;
+    }
+
+    /* ─── Logo en header del formulario ─────────────────────────── */
+    .form-logo-frame {
+      display: flex; flex-direction: column; align-items: center;
+      margin-bottom: 12px;
+    }
+    .form-logo-brand-txt {
+      font-size: .72rem; font-weight: 700; letter-spacing: .14em;
+      text-transform: uppercase; color: rgba(255,255,255,.95);
+      margin-bottom: 4px; text-shadow: 0 1px 4px rgba(0,0,0,.2);
+    }
+    .form-logo-clip {
+      overflow: hidden; height: 66px; width: 148px;
+      border-radius: 8px; background: rgba(255,255,255,.1);
+    }
+    .form-logo-clip img {
+      width: 148px; margin-top: -20px;
+      mix-blend-mode: multiply; display: block;
     }
 
     #screen-success { padding: 48px 28px; text-align: center; }
@@ -141,7 +160,7 @@
     #screen-success p  { font-size: .85rem; color: var(--muted); line-height: 1.5; }
     .event-pill {
       display: inline-flex; align-items: center; gap: 6px;
-      background: #ede7ff; color: var(--primary); border-radius: 20px;
+      background: #ffd6ec; color: var(--primary); border-radius: 20px;
       padding: 6px 16px; font-size: .8rem; font-weight: 600; margin-top: 14px;
     }
     .new-badge {
@@ -171,6 +190,12 @@
   <!-- Form -->
   <div id="screen-form" class="screen">
     <div class="card-header">
+      <div class="form-logo-frame">
+        <span class="form-logo-brand-txt">Juventudes</span>
+        <div class="form-logo-clip">
+          <img src="LOGO.jpeg" alt="Juventudes Creo en Vos">
+        </div>
+      </div>
       <div class="tag"><i class="fas fa-check-circle"></i> Registro de asistencia</div>
       <h1 id="event-title">—</h1>
       <div id="event-desc-wrap" style="font-size:.82rem;opacity:.85;margin-top:4px;display:none">
